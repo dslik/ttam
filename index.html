@@ -1,0 +1,302 @@
+<!DOCTYPE HTML> 
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Transport Triggered Architecture - Modular</title>
+    <link rel="stylesheet" href="css/fonts.css"/>
+    <link rel="stylesheet" href="css/guide.css"/>
+    <script src="js/pinout.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wavedrom/2.6.3/skins/default.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wavedrom/2.6.3/wavedrom.min.js" type="text/javascript"></script>
+</head>
+<body onload="WaveDrom.ProcessAll()">
+    <header>
+        <div class="title">
+            <a href="index.html">
+                <img src="img/logo.svg"/>
+                <span>TTAM Guide</span>
+            </a>
+        </div>
+        <nav>
+            <a href="https://github.com/dslik/ttam"><div>view on github</div></a>
+        </nav>
+    </header>
+    <main>
+        <h1>TTAM: Transport Triggered Architecture - Modular</h1>
+        <p class="subtitle">Design and implementation guide, Revision 1</p>
+        <hr/>
+        <h3>Table of Contents</h3>
+        <div><a href="#introduction">Introduction</a></div>
+        <div><a href="#bus-design">Bus design</a></div>
+        <div><a href="#ttam-carrier">Carrier Card</a></div>
+        <div><a href="#data-modules">Data Modules</a></div>
+        <div><a href="#processing-modules">Processing Modules</a></div>
+        <div><a href="#address-modules">Address Modules</a></div>
+        <div><a href="#mbcs">Manual Bus Control System</a></div>
+        <div><a href="#pccs">Program Counter Control System</a></div>
+        <h3>Introduction</h3>
+        <p id="introduction">A Transport Triggered Architecture (TTA) is a type of computer processor design where software instructions directly control the movement of data between processor components. Unlike traditional processor designs, there is only one instruction, <code>mov dst <= src</code>, where computation occurs as a <i>side effect</i> of data movement.</p>
+        <p>This project covers the documentation of a modular TTA implementation based around a series of 3U Eurocard carrier boards connected over a standard VME backplane. Each board hosts one or more TTA modules (TTAMs) that implement various <i>function units</i>. Examples of function units include everything from basic ALU operations, such as addition, multiplication, bit-wise operations, registers, memory, and all the way up to full I/O and complex processing units.</p>
+        <aside class="impl">
+            <img class="icon" src="img/ISO_7010_W001.svg"/>
+            <h5>WARNING</h5>
+            <div class="vs">TTAM cards are not compatible with standard VME cards, and the two types of cards must not be mixed.</div>
+        </aside>
+        <p>The goal of this project is to refresh my hardware design skills by implementing a "retro-computer" system that would have been state of the art in the 1980's. Whenever possible, components available in the 1980's have been used. Nothing in this project is particularly innovative, and everything associated with this project is released into the public domain.</p>
+        <h3>Bus Design</h3>
+        <p id="bus-design">TTAM is a hybrid 16/8-bit system, with a data width (and instruction length) of 16 bits, and an address width of 8 bits. While a standard VME backplane is used, it is important to emphasize that TTAM is not compatible with VME cards.</p>
+        <h4>Address Bus</h4>
+       <script type="WaveDrom">
+        {reg:[
+            {bits: 8,  name: "address (dst)", type: 4},
+            {bits: 8,  name: "address (src)", type: 3}
+        ], config:{bits: 16, hspace: 710}}
+        </script>
+        <p>The address bus is split into two 8-bit address busses: the <code>src</code> address bus and the <code>dst</code> address bus. This means that the system is only able to directly address 256 addresses, which are known as <i>sockets</i>.</p>
+        <p>The address bus lines are mapped to the VME pins A01 through A16.</p>
+        <h4>Data Bus</h4>
+        <script type="WaveDrom">
+        {reg:[
+            {bits: 16,  name: "data", type: 1},
+        ], config:{bits: 16, hspace: 710}}
+        </script>
+        <p>The data bus is a standard 16-bit bus.</p>
+        <p>The data bus lines are mapped to the VME pins D00 through D15.</p>
+        <h4>Control Lines</h4>
+        <p>Bus operations are controlled by three strobe lines: the address strobe, the data strobe, and the Data Acknowledgement (D<sub>ACK</sub>) strobe. This approach allows the system to be run sychronously or asynchronously.</p>
+        <p>The control lines are mapped to the VME pins as follows:</p>
+        <ul>
+            <li>Address Strobe - AS*</li>
+            <li>Data Strobe - DS0*</li>
+            <li>D<sub>ACK</sub> Strobe - DTACK*</li>
+        </ul>
+        <h4>Asynchronous Bus Operation</h4>
+        <p>TTAM <code>mov</code> instructions, literal encodings of source and destination addresses, are placed onto the address bus by a bus master, causing a first function unit write to the data bus, and a second function unit to read from the data bus. The bus cycle is typically managed by the <a href="#pccs">Program Counter Control System</a> (PCCS), but can be driven by any bus master.</p>
+        <ol>
+            <li>The PCCS first places the instruction onto the bus, and asserts the address strobe (a).</li>
+            <li>The rising edge of the address strobe (a) indicates that the address bus has stabilized, and triggers the source function unit (addressed by the <code>src</code> address on the address bus) to write to the data bus (b). Once the data bus has stabilized, the source function unit asserts the data strobe (c).</li>
+            <li>The rising edge of the data strobe (c) triggers the destination function unit (addressed by the <code>dst</code> address on the address bus) to read from the data bus. When the read operation is complete, D<sub>ACK</sub> is strobed (d).</li>
+            <li>The rising edge of the D<sub>ACK</sub> strobe tells the source function unit to stop driving the data bus, and triggers the PCCS to proceed to the next instruction.</li>
+        </ol>
+        <script type="WaveDrom">
+        { signal : [
+            { name: "Address Strobe",   wave: "0..10........", node: "...a" },
+            { name: "Address Bus",      wave: "x.3.......x..", data: ["address (src, dst)"] },
+            { name: "Data Bus",         wave: "x....3....x..", data: "data", node: ".....b" },
+            { name: "Data Strobe",      wave: "0......10....", node: ".......c" },
+            { name: "Data Acknowledge", wave: "0........10..", node: ".........d" },
+        ],
+        edge:['a~>b ', 'b~>c ', 'c~>d ']}
+        </script>
+        <p>The absence of a data strobe indicates a source address bus error and will halt execution. The absence of a D<sub>ACK</sub> strobe indicates a destination address bus error and will halt execution. In both cases, the invalid address will remain present on the address bus. Detecting these conditions can be used to trigger a function unit that jumps to a monitor bus error handler.</p>
+        <h4>Synchronous Bus Operation</h4>
+        <p>In synchronous operation, the clock must be slower than the slowest function unit. The address strobe line is connected to the clock, and the data strobe line is connected to the clock through an inverter. D<sub>ACK</sub> is ignored.</p>
+        <script type="WaveDrom">
+        { signal : [
+            { name: "Clock",            wave: "0..1...0...1." },
+            { name: "Address Strobe",   wave: "0..1...0...1." },
+            { name: "Address Bus",      wave: "x.3.......x..", data: ["address (src, dst)"]},
+            { name: "Data Bus",         wave: "x....3....x..", data: "data" },
+            { name: "Data Strobe",      wave: "1..0...1...0." },
+            { name: "Data Acknowledge", wave: "0........10.." },
+       ]}
+        </script>
+        <h4>Bus Decoding</h4>
+        <p>For Functional Units to be triggered, the address bus must be decoded, and the control signals must be sequenced.</p>
+        <script type="WaveDrom">
+        { signal : [
+            { name: "Address Bus",      wave: "x.3.......x.."},
+            { name: "Address Decode",   wave: "1.0.......1.."},
+            { name: "Address Strobe",   wave: "0..10........"},
+            { name: "FU Write Select",  wave: "1..0.....1..."},
+            { name: "Data Strobe",      wave: "0......10...."},
+            { name: "FU Read Select",   wave: "1......01...."},
+            { name: "Data Acknowledge", wave: "0........10.."},
+        ]}
+        </script>
+        <p>When the <code>src</code> and <code>dst</code> addresses are placed on the address bus, if the specified <code>src</code> address matches the base address programmed for a given functional unit, the address decode line is pulled low. This acts as an enable to allow the address strobe to be latched, and tell the functional unit to drive the data bus. The functional unit write select (WS) remains low until D<sub>ACK</sub> is strobed. If the specified <code>dst</code> matches the base address, when the Data Strobe is asserted, the functional unit read select (RS) is pulled low for the duration of the strobe.</p>
+        <p>An example of the logic for when there are two functional units sharing the same base address, and selected by the A0/A8 line, is shown below:</p>
+        <img src="img/address_decode.png" style="width: 700px;"/>
+        <h4>Bus Arbitration</h4>
+        <p>When a inactive bus master wants to become active, it first checks if IACK* is low. If IACK* is low, another inactive bus master has already requested to become active, and the inactive bus master must wait. If IACK* is high, the inactive bus master drives the IACK* low. When the active bus master detects IACK* is low, when it is able and willing to release the bus, it strobes DS1*. When the inactive bus master that is waiting for bus access detects the DS1* rising edge, it becomes the active bus master, and stops driving IACK* low.</p>
+        <aside style="position: relative; top: 6px;">
+            <p>Using the more logical BBSY* and BCLR* lines is avoided due to the desire to only use Row A and Row C pins on the VME J1 connector.</p>
+        </aside>
+        <p>IACK* is an open-collector bus line.</p>
+        <h3>Carrier Card (TTAM/C)</h3>
+        <p id="ttam-carrier">The TTAM carrier card is a standard 3U 160 mm Eurocard board that conforms to the VME mechanical specification. It provides bus isolation, power conditioning, and has sites to plug in two TTAM/A address modules, three TTAM/D data modules, and one TTAM/P processing module.</p>
+        <img src="img/ttam_carrier.svg" style="height: 480px;"/>
+        <h4>TTAM/D Connectors</h4>
+        <p>Each TTAM/D module has two 24-pin connectors.</p>
+        <h5>Data Bus Connector (Top Connector)</h4>
+        <p>The TTAM/D top connector carries the data bus and control lines. The pinout is as follows:</p>
+        <svg id="data_pinout" width="1px" height="1px"></svg>
+        <script>
+            var svg = svgen("svg", { width:500, height:220, id:"data_pinout" });
+            var element = document.getElementById('data_pinout');
+            drawPinout(svg, { width:2, length:12, names:["D14", "D12", "D10", "D08",
+                                                         "TDI", "TCK", "TMS", "TDO", 
+                                                         "D06", "D04", "D02", "D00",
+                                                         "D15", "D13", "D11", "D09", 
+                                                         "RS", "RA", "WS", "WA", 
+                                                         "D07", "D05", "D03", "D01"],
+                                                 colors:["#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD", 
+                                                         "#D3E5EB", "#D3E5EB", "#D3E5EB", "#D3E5EB", 
+                                                         "#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD",
+                                                         "#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD", 
+                                                         "#F6E15D", "#F6E15D", "#F6E15D", "#F6E15D", 
+                                                         "#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD"] });
+            element.parentNode.replaceChild(svg, element)
+        </script>
+        <p>The following connector pins are defined:</p>
+        <ul>
+            <li>D00 through D15 are input/outputs that connect to the system data bus through a '245 bus transceiver.</li>
+            <li>TDI, TCK, TMS and TDO provide JTAG boundary scan access.</li>
+            <li>WS (Write Select) is an input that is set high when a value is to be written to the data bus.</li>
+            <li>WA (Write Acknowledge) is an output that indicates when a write has stabilized and the value on the bus can be read from. It is typically connected to the WS line, either directly or through a delay element.</li>
+            <li>RS (Read Select) is an input that is strobed high when a value is to be read from the data bus into a local latch.</li>
+            <li>RA (Read Acknowledge) is an output that indicates when a read has successfully stored the value from the bus. It is typically connected to the RS line, either directly or through a delay element.</li>
+        </ul>
+        <h5>Processing Connector (Bottom Connector)</h4>
+        <p>The TTAM/D bottom connector carries signals to the TTAM/P module. The pinout is as follows:</p>
+        <svg id="processing_pinout" width="1px" height="1px"></svg>
+        <script>
+            var svg = svgen("svg", { width:500, height:220, id:"processing_pinout" });
+            var element = document.getElementById('processing_pinout');
+            drawPinout(svg, { width:2, length:12, names:["D14", "D12", "D10", "D08",
+                                                         "G4", "G3", "G2", "G0", 
+                                                         "D06", "D04", "D02", "D00",
+                                                         "D15", "D13", "D11", "D09", 
+                                                         "G5", "PWR", "GND", "G1", 
+                                                         "D07", "D05", "D03", "D01"],
+                                                 colors:["#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD", 
+                                                         "#F6E15D", "#F6E15D", "#F6E15D", "#F6E15D", 
+                                                         "#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD",
+                                                         "#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD", 
+                                                         "#F6E15D", "#AB3535", "#000000", "#F6E15D", 
+                                                         "#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD"] });
+            element.parentNode.replaceChild(svg, element)
+        </script>
+        <p>The following connector pins are defined:</p>
+        <ul>
+            <li>D00 through D15 are an internal data bus connecting the TTAM/D to a TTAM/P.</li>
+            <li>G0 through G5 are general purpose pins. G0 is connected to either the G0N or G0S pin on the corresponding TTAM/A.</li>
+            <li>G4 and G5 on TTAM/D position #3 are connected to IACK* and DS1*, respectively.</li>
+            <li>PWR and GND provide power and ground, respectively.</li>
+        </ul>
+        <h4>TTAM/P Connectors</h4>
+        <p>Each TTAM/A module has three 32-pin connectors.</p>
+        <h5>Processing Connectors</h5>
+        <p>Each TTAM/P module has up to three 24-pin connectors, each with the pinout described above for the TTAM/D processing connector. Each of the three processing connectors are connected to the corresponding TTAM/D processing connector.</p>
+        <h4>TTAM/A Connectors</h4>
+        <p>Each TTAM/A module has a single 32-pin connector.</p>
+        <h5>Address Bus Connectors</h5>
+        <p>The TTAM/A connector carries address bus and control lines. The pinout is as follows:</p>
+        <svg id="address_pinout" width="1px" height="1px"></svg>
+        <script>
+            var svg = svgen("svg", { width:600, height:220, id:"address_pinout" });
+            var element = document.getElementById('address_pinout');
+            drawPinout(svg, { width:2, length:16, names:["A14", "A12", "A10", "A08",
+                                                         "RSN", "WSN", "AS", "DS", 
+                                                         "DA", "ADIR", "WSS", "RSS", 
+                                                         "A06", "A04", "A02", "A00",
+                                                         "A15", "A13", "A11", "A09", 
+                                                         "RAN", "WAN", "G0N", "GND", 
+                                                         "PWR", "G0S", "WAS", "RAS", 
+                                                         "A07", "A05", "A03", "A01"],
+                                                 colors:["#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD", 
+                                                         "#F6E15D", "#F6E15D", "#F6E15D", "#F6E15D", 
+                                                         "#F6E15D", "#F6E15D", "#F6E15D", "#F6E15D", 
+                                                         "#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD",
+                                                         "#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD", 
+                                                         "#F6E15D", "#F6E15D", "#F6E15D", "#000000", 
+                                                         "#AB3535", "#F6E15D", "#F6E15D", "#F6E15D", 
+                                                         "#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD"] });
+            element.parentNode.replaceChild(svg, element)
+        </script>
+        <p>The following connector pins are defined:</p>
+        <ul>
+            <li>A00 through A15 are input/outputs that connect to the system address bus a '245 bus transceiver. These lines are only driven as outputs when the board is acting as a bus master.</li>
+            <li>AS, DS, and DA are connected to the Address Strobe, Data Strobe and Data acknowledge lines, respectively. These are used by the TTAM/A to control the read and write control lines.</li>
+            <li>WSN/WSS are outputs that are connected to the WS input on the upper (north) and lower (south) TTAM/D modules.</li>
+            <li>WAN/WAS are inputs that are connected to the WA input on the upper (north) and lower (south) TTAM/D modules.</li>
+            <li>RSN/RSS are outputs that are connected to the RS input on the upper (north) and lower (south) TTAM/D modules.</li>
+            <li>RAN/RAS are inputs that are connected to the RA input on the upper (north) and lower (south) TTAM/D modules.</li>
+            <li>G0N/G0S are outputs that are connected to the G0 input on the upper (north) and lower (south) TTAM/D modules. This is typically for general purpose connections to TTAM/P modules.</li>
+            <li>ADIR is an output that controls the '245 and is used to write to the address bus. This line should be left disconnected unless the card acts as a bus master.</li>
+            <li>PWR and GND provide power and ground, respectively.</li>
+        </ul>
+
+        <h4>JTAG Boundary Scan Connector</h4>
+        <p>A six-pin JTAG port is located at the front of the card, and is connected to each of the TTAM/D data bus connectors. This allows for boundary-scan automated testing of a function unit without having to connect it to the bus.</p>
+
+        <h3 id="MBDS">Manual Bus Display System (MBDS)</h3>
+        <p>The MBDS is a dedicated card that displays the current state of the address and data busses, plus control signals, in binary. There are two modes of operation, a first mode displays the current bus state, and a second mode where the contents of one or two optionally installed register TTAM/D (and corresponding TTAM/As) is displayed. Four <a href="https://www.idt.com/us/en/document/dst/qs3390-datasheet">IDTQS3390</a> bus switches are used to switch between the bus signals and the outputs of the TTAM/D modules.</p>
+        <aside style="position: relative; top: 6px;">
+            <p>Using an HCMS-2913 to display the bus values in hex would be a nice enhancement to this board.</p>
+        </aside>
+        <p>In the second mode of operation the functional unit occupies a memory space of 2<sup>1</sup>:</p>
+        <pre><code>Addr        RW   Description
+----------------------------------------------------
+base + 0    RW   Display Register 0 (data)
+base + 1    RW   Display Register 1 (address)</code></pre>
+
+        <h3 id="MBCS">Manual Bus Control System (MBCS)</h3>
+        <p>The MBCS is a dedicated bus-master card used to manipulate the bus state, single step the system, and transfer control between bus masters. There are two modes of operation, a first mode directly controls the current bus state, and a second mode where the contents of one or two optionally installed register TTAM/D (and corresponding TTAM/As) can be read.</p>
+        <p>In the second mode of operation the functional unit occupies a memory space of 2<sup>1</sup>:</p>
+        <pre><code>Addr        RW   Description
+----------------------------------------------------
+base + 0    RO   Data Bus Switch Value
+base + 1    RO   Address Bus Switch Value</code></pre>
+
+        <h3>Data Modules (TTAM/D)</h3>
+
+        <h4 id="IVFU">Immediate Value Function Unit (IVFU)</h4>
+        <p>The IVFU TTAM/D transfers an 8-bit literal value from the address bus into a data register. This is accomplished by overloading the <code>dst</code> address to use as the literal. When an instruction <code>src</code> address targets the IVFU, the IVFU takes the <code>dst</code> address, and stores it into an immediate value register.</p>
+        <p>The functional unit occupies a memory space of 2<sup>2</sup>:</p>
+        <pre><code>Addr        RW   Description
+----------------------------------------------------
+base + 0    RO   Lower 8 bits immediate
+base + 1    RO   Upper 8 bits immediate
+base + 2    RO   Immediate value register
+base + 3    NA   Unused</code></pre>
+        <p>If an IVFU is located at the base address 0x08 and the <a href="#MBDS">MBDS</a> is located at the base address 0x04, to transfer the value 0x0B0E into the immediate value register, then to display it on the <a href="#MBDS">MBDS</a> output, the following TTAM code would be executed:</p>
+        <pre><code>mov 0x0E <- 0x08
+mov 0x0B <- 0x09
+mov 0x05 <- 0x0A</code></pre>
+        <p>The IVFU does not strobe the data strobe line, and skips the store phase by skipping to strobing the D<sub>ACK</sub> line. This is the only function unit that has this behaviour.</p>
+        <aside style="position: relative; top: 6px;">
+            <p>While this approach could be used more generally to extend the instruction set, it is avoided.</p>
+        </aside>
+        <p>The IVFU is implemented as a combination TTAM/D + TTAM/A module. As such, it can only be installed in TTAM/D position 3.</p>
+
+        <h3>Processing Modules (TTAM/P)</h3>
+
+        <h4>Arithmetic Logic Function Unit (ALFU)</h4>
+
+        <h4>Paged Memory Function Unit (PMFU)</h4>
+        <p>The PMFU TTAM/P provides a 16 or 32 address window into a larger 2<sup>21</sup> bit memory bank.</p>
+        <p>Depending on the configuration jumper, the address map occupies either memory space of 2<sup>4</sup> or 2<sup>5</sup>:</p>
+        <pre><code>Addr        RW   Description
+----------------------------------------------------
+base + 0    RW   Memory window 0
+base + 1    RW   Memory window 1
+...
+base + N-1  RW   Memory window 14
+base + N    RW   Page</code></pre>
+        <p>The PMFU is implemented as a combination TTAM/P + TTAM/A module, and requires two FIXME TTAM/D modules, one for the page access and one for memory access, installed in positions 1 and 2. The PMFU is typically co-hosted with the <a href="#IVFU">IVFU</a> on a single TTAM/C.</p>
+
+        <h4>Stack Memory Function Unit (SMFU)</h4>
+
+        <h4>Queue Memory Function Unit (QUFU)</h4>
+
+        <h3>Address Modules (TTAM/A)</h3>
+
+        <h3>Program Counter Control System</h3>
+    </main>
+    <footer>
+        <p>Thanks for reading the TTAM documentation.</p>
+        <p class="small"><a href="#top">Table of contents</a></p>
+    </footer>
+</body>
+</html>
