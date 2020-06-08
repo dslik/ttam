@@ -43,8 +43,8 @@
             <div class="vs">TTAM cards are not compatible with standard VME cards, and the two types of cards must not be mixed.</div>
         </aside>
         <p>The goal of this project is to refresh my hardware design skills by implementing a "retro-computer" system that would have been state of the art in the 1980's. Whenever possible, components available in the 1980's have been used. Nothing in this project is particularly innovative, and everything associated with this project is released into the public domain.</p>
-        <h3>Bus Design</h3>
-        <p id="bus-design">TTAM is a hybrid 16/8-bit system, with a data width (and instruction length) of 16 bits, and an address width of 8 bits. While a standard VME backplane is used, it is important to emphasize that TTAM is not compatible with VME cards.</p>
+        <h3 id="bus-design">Bus Design</h3>
+        <p>TTAM is a hybrid 16/8-bit system, with a data width (and instruction length) of 16 bits, and an address width of 8 bits. While a standard VME backplane is used, it is important to emphasize that TTAM is not compatible with VME cards.</p>
         <h4>Address Bus</h4>
        <script type="WaveDrom">
         {reg:[
@@ -101,7 +101,7 @@
             { name: "Data Acknowledge", wave: "0........10.." },
        ]}
         </script>
-        <h4>Bus Decoding</h4>
+        <h4 id="bus-decoding">Bus Decoding</h4>
         <p>For Functional Units to be triggered, the address bus must be decoded, and the control signals must be sequenced.</p>
         <script type="WaveDrom">
         { signal : [
@@ -292,6 +292,26 @@ base + N    RW   Page</code></pre>
 
         <h3>Address Modules (TTAM/A)</h3>
 
+        <h4>Generic Register Address Module (GRAM)</h4>
+        <p>The GRAM provides read and write address decoding, and is implemented as a standard TTAM/A module. The circuit implemented as described in the <a href="#bus-decoding">Bus decoding</a> section.</p>
+        <img src="img/GRAM_render.png" style="width: 700px;"/>
+        <p>Bill of Material:</p>
+        <table border="true" style="width: 700px;">
+            <tr><th>Number</th><th>Part</th><th>Description</th></tr>
+            <tr><td>C1, C2</td><td></td><td>0.1 uf SMT decoupling capacitor</td></tr>
+            <tr><td>CN1</td><td></td><td>32-pin 2-row connector</td></tr>
+            <tr><td>DSW1</td><td></td><td>6 position SPST DIP switch</td></tr>
+            <tr><td>R1, R1</td><td></td><td>2.2 k SMT resistor</td></tr>
+            <tr><td>SRC, DST</td><td></td><td>SMT LED</td></tr>
+            <tr><td>U1, U2</td><td><a href="https://pdf1.alldatasheet.com/datasheet-pdf/view/65936/IDT/IDT74FCT521BTSO.html">IDT74FCT521BTSO</a></td><td>8-bit Identity Comparator</td></tr>
+            <tr><td>U3, U4</td><td><a href="https://assets.nexperia.com/documents/data-sheet/74LVC2G00.pdf">74LVC2G00DP</a></td><td>Dual 2-input NAND gate</td></tr>
+            <tr><td>U5, U6, U9, U10</td><td><a href="https://assets.nexperia.com/documents/data-sheet/74LVC1G04.pdf">74LVC1G04GW</a></td><td>Single inverter</td></tr>
+            <tr><td>U7</td><td><a href="http://www.ti.com/lit/ds/symlink/sn74lvc1g175.pdf">SN74LVC1G175DBV</a></td><td>Single D-Type Flip-Flop With Asynchronous Clear</td></tr>
+            <tr><td>U8</td><td><a href="https://assets.nexperia.com/documents/data-sheet/74LVC1G02.pdf">74LVC1G02GW</a></td><td>Single 2-input NOR gate</td></tr>
+        </table>
+        <aside style="position: relative; top: 6px;">
+            <p>The 74FCT521 was used because it was what I had on hand. All of these components could be replaced with a simple PAL or CPLD, which may be a follow-up project.</p>
+        </aside>
         <h3>Program Counter Control System</h3>
     </main>
     <footer>
