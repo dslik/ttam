@@ -108,13 +108,13 @@
             { name: "Address Bus",      wave: "x.3.......x.."},
             { name: "Address Decode",   wave: "1.0.......1.."},
             { name: "Address Strobe",   wave: "0..10........"},
-            { name: "FU Write Select",  wave: "1..0.....1..."},
+            { name: "Read Select",      wave: "1..0.....1..."},
             { name: "Data Strobe",      wave: "0......10...."},
-            { name: "FU Read Select",   wave: "1......01...."},
+            { name: "Write Select",     wave: "1......01...."},
             { name: "Data Acknowledge", wave: "0........10.."},
         ]}
         </script>
-        <p>When the <code>src</code> and <code>dst</code> addresses are placed on the address bus, if the specified <code>src</code> address matches the base address programmed for a given functional unit, the address decode line is pulled low. This acts as an enable to allow the address strobe to be latched, and tell the functional unit to drive the data bus. The functional unit write select (WS) remains low until D<sub>ACK</sub> is strobed. If the specified <code>dst</code> matches the base address, when the Data Strobe is asserted, the functional unit read select (RS) is pulled low for the duration of the strobe.</p>
+        <p>When the <code>src</code> and <code>dst</code> addresses are placed on the address bus, if the specified <code>src</code> address matches the base address programmed for a given functional unit, the address decode line is pulled low. This acts as an enable to allow the address strobe to be latched, and tell the functional unit to drive the data bus. The functional unit read select (RS) remains low until D<sub>ACK</sub> is strobed. If the specified <code>dst</code> matches the base address, when the Data Strobe is asserted, the functional unit write select (WS) is pulled low for the duration of the strobe.</p>
         <p>An example of the logic for when there are two functional units sharing the same base address, and selected by the A0/A8 line, is shown below:</p>
         <img src="img/address_decode.png" style="width: 700px;"/>
         <h4>Bus Arbitration</h4>
@@ -125,7 +125,7 @@
         <p>IACK* is an open-collector bus line.</p>
         <h3>Carrier Card (TTAM/C)</h3>
         <p id="ttam-carrier">The TTAM carrier card is a standard 3U 160 mm Eurocard board that conforms to the VME mechanical specification. It provides bus isolation, power conditioning, and has sites to plug in two TTAM/A address modules, three TTAM/D data modules, and one TTAM/P processing module.</p>
-        <img src="img/ttam_carrier.svg" style="height: 480px;"/>
+        <img src="img/ttam_carrier.png" style="width: 700px;"/>
         <h4>TTAM/D Connectors</h4>
         <p>Each TTAM/D module has two 24-pin connectors.</p>
         <h5>Data Bus Connector (Top Connector)</h4>
@@ -138,7 +138,7 @@
                                                          "TDI", "TCK", "TMS", "TDO", 
                                                          "D06", "D04", "D02", "D00",
                                                          "D15", "D13", "D11", "D09", 
-                                                         "RS", "RA", "WS", "WA", 
+                                                         "WS", "WA", "RS", "RA", 
                                                          "D07", "D05", "D03", "D01"],
                                                  colors:["#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD", 
                                                          "#D3E5EB", "#D3E5EB", "#D3E5EB", "#D3E5EB", 
@@ -152,10 +152,10 @@
         <ul>
             <li>D00 through D15 are input/outputs that connect to the system data bus through a '245 bus transceiver.</li>
             <li>TDI, TCK, TMS and TDO provide JTAG boundary scan access.</li>
-            <li>WS (Write Select) is an input that is set high when a value is to be written to the data bus.</li>
-            <li>WA (Write Acknowledge) is an output that indicates when a write has stabilized and the value on the bus can be read from. It is typically connected to the WS line, either directly or through a delay element.</li>
-            <li>RS (Read Select) is an input that is strobed high when a value is to be read from the data bus into a local latch.</li>
-            <li>RA (Read Acknowledge) is an output that indicates when a read has successfully stored the value from the bus. It is typically connected to the RS line, either directly or through a delay element.</li>
+            <li>WS (Write Select) is an input that is set high when a value is to be written to the functional unit (read from the data bus).</li>
+            <li>WA (Write Acknowledge) is an output that indicates when a write has successfully stored the value from the bus. It is typically connected to the WS line, either directly or through a delay element.</li>
+            <li>RS (Read Select) is an input that is strobed high when a value is to be read from the functional unit (to drives the data bus).</li>
+            <li>RA (Read Acknowledge) is an output that indicates when a value being read (driving the data bus) has stabilized and the value on the bus can be written to another functional unit. It is typically connected to the RS line, either directly or through a delay element.</li>
         </ul>
         <h5>Processing Connector (Bottom Connector)</h4>
         <p>The TTAM/D bottom connector carries signals to the TTAM/P module. The pinout is as follows:</p>
@@ -163,12 +163,12 @@
         <script>
             var svg = svgen("svg", { width:500, height:220, id:"processing_pinout" });
             var element = document.getElementById('processing_pinout');
-            drawPinout(svg, { width:2, length:12, names:["D14", "D12", "D10", "D08",
-                                                         "G4", "G3", "G2", "G0", 
-                                                         "D06", "D04", "D02", "D00",
-                                                         "D15", "D13", "D11", "D09", 
-                                                         "G5", "PWR", "GND", "G1", 
-                                                         "D07", "D05", "D03", "D01"],
+            drawPinout(svg, { width:2, length:12, names:["P14", "P12", "P10", "P08",
+                                                         "G4", "G3", "G2", "G1", 
+                                                         "P06", "P04", "P02", "P00",
+                                                         "P15", "P13", "P11", "P09", 
+                                                         "G5", "PWR", "GND", "G0", 
+                                                         "P07", "P05", "P03", "P01"],
                                                  colors:["#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD", 
                                                          "#F6E15D", "#F6E15D", "#F6E15D", "#F6E15D", 
                                                          "#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD",
@@ -179,7 +179,7 @@
         </script>
         <p>The following connector pins are defined:</p>
         <ul>
-            <li>D00 through D15 are an internal data bus connecting the TTAM/D to a TTAM/P.</li>
+            <li>P00 through P15 are an internal data bus connecting the TTAM/D to a TTAM/P.</li>
             <li>G0 through G5 are general purpose pins. G0 is connected to either the G0N or G0S pin on the corresponding TTAM/A.</li>
             <li>G4 and G5 on TTAM/D position #3 are connected to IACK* and DS1*, respectively.</li>
             <li>PWR and GND provide power and ground, respectively.</li>
@@ -259,7 +259,7 @@ base + 1    RO   Address Bus Switch Value</code></pre>
 base + 0    RO   Lower 8 bits immediate
 base + 1    RO   Upper 8 bits immediate
 base + 2    RO   Immediate value register
-base + 3    NA   Unused</code></pre>
+base + 3    NA   Unused (address reserved for north position)</code></pre>
         <p>If an IVFU is located at the base address 0x08 and the <a href="#MBDS">MBDS</a> is located at the base address 0x04, to transfer the value 0x0B0E into the immediate value register, then to display it on the <a href="#MBDS">MBDS</a> output, the following TTAM code would be executed:</p>
         <pre><code>mov 0x0E <- 0x08
 mov 0x0B <- 0x09
@@ -269,6 +269,38 @@ mov 0x05 <- 0x0A</code></pre>
             <p>While this approach could be used more generally to extend the instruction set, it is avoided.</p>
         </aside>
         <p>The IVFU is implemented as a combination TTAM/D + TTAM/A module. As such, it can only be installed in TTAM/D position 3.</p>
+
+        <h4 id="GRDM">Generic Register Data Module (GRAM)</h4>
+        <p>When fully populated, the GRDM implements a single read-write register that can be used stand-alone or connected to a processing module.</p>
+        <p>WA is connected to G3 to signal to the TTAM/P when a new value has been written.</p>
+        <p>RS is connected to G1 to signal to the TTAM/P when a value is being read been written, and pulling G2 low allows the processing module to drive the bus.</p>
+        <p>G2 is connected to the output latch enable. Pulling G2 low allows the processing module to drive the bus.</p>
+        <p>When half-populated (U1, U2, U6, U7, U11, and U12), the GRAM implements a single read-only register driven by an output from a processing module.</p>
+        <p>Scan-test latches are used to allow a function unit to be tested independently of the rest of the system.</p>
+        <p>In order to allow the register to operate asynchronously, two delay lines are included, which provide the delay between when read select goes high and when the bus has stabilized, and to provide a delay between when write select goes high and the bus value has been successfully stored.</p>
+        <aside style="position: relative; top: 6px;">
+            <p>The delay logic may be moved onto the TTAM carrier at a future date.</p>
+        </aside>
+        <img src="img/GRDM_render.png" style="width: 700px;"/>
+        <p>Bill of Material:</p>
+        <table border="true" style="width: 700px;">
+            <tr><th>Number</th><th>Part</th><th>Description</th></tr>
+            <tr><td>C1 - C6</td><td></td><td>0.1 uf SMT decoupling capacitor</td></tr>
+            <tr><td>CN1, CN2</td><td></td><td>24-pin 2-row connector</td></tr>
+            <tr><td>R1 - R3</td><td></td><td>2.2 k SMT resistor</td></tr>
+            <tr><td>R4</td><td></td><td>50 k SMT resistor (pull-up)</td></tr>
+            <tr><td>LED1 - LED3</td><td></td><td>SMT LED</td></tr>
+            <tr><td>U1 - U4</td><td><a href="https://www.ti.com/lit/ds/symlink/sn74bct8374a.pdf">SN74BCT8374A</a></td><td>Octal D-Type Edge-Triggered Flip-Flops</td></tr>
+            <tr><td>U5, U6</td><td><a href="https://datasheets.maximintegrated.com/en/ds/DS1007.pdf">DS1007S-2</a></td><td>7-1 Silicon Delay Line</td></tr>
+            <tr><td>U7, U8, U13</td><td><a href="https://assets.nexperia.com/documents/data-sheet/74LVC1G04.pdf">74LVC1G04GW</a></td><td>Single inverter</td></tr>
+            <tr><td>U9, U11</td><td><a href="https://assets.nexperia.com/documents/data-sheet/74LVC1G86.pdf">74LVC1G86GW</a></td><td>2-input EXCLUSIVE-OR gate</td></tr>
+            <tr><td>U10, U12</td><td><a href="https://assets.nexperia.com/documents/data-sheet/74AUP1G09.pdf">74AUP1G09GW</a></td><td>Single 2-input AND gate with open drain</td></tr>
+        </table>
+        <p>The address of the GRDM register depends on the position it is installed on, and the base address of the corresponding <a href="#GRAM">GRAM</a>.</p>
+        <pre><code>Addr        RW   Description
+----------------------------------------------------
+base + 0    RW   Register in south position
+base + 1    RW   Register in north position</code></pre>
 
         <h3>Processing Modules (TTAM/P)</h3>
 
@@ -284,7 +316,8 @@ base + 1    RW   Memory window 1
 ...
 base + N-1  RW   Memory window 14
 base + N    RW   Page</code></pre>
-        <p>The PMFU is implemented as a combination TTAM/P + TTAM/A module, and requires two FIXME TTAM/D modules, one for the page access and one for memory access, installed in positions 1 and 2. The PMFU is typically co-hosted with the <a href="#IVFU">IVFU</a> on a single TTAM/C.</p>
+        <p>The PMFU is implemented as a combination TTAM/P + TTAM/A module, and requires two <a href="#GRDM">GRDM</a> TTAM/D modules, one for the page access and one for memory access, installed in positions 1 and 2. The PMFU is typically co-hosted with the <a href="#IVFU">IVFU</a> on a single TTAM/C.</p>
+        <img src="img/ttam_carrier_pmfu.png" style="width: 700px;"/>
 
         <h4>Stack Memory Function Unit (SMFU)</h4>
 
@@ -292,7 +325,7 @@ base + N    RW   Page</code></pre>
 
         <h3>Address Modules (TTAM/A)</h3>
 
-        <h4>Generic Register Address Module (GRAM)</h4>
+        <h4 id="GRAM">Generic Register Address Module (GRAM)</h4>
         <p>The GRAM provides read and write address decoding, and is implemented as a standard TTAM/A module. The circuit implemented as described in the <a href="#bus-decoding">Bus decoding</a> section.</p>
         <img src="img/GRAM_render.png" style="width: 700px;"/>
         <p>Bill of Material:</p>
@@ -301,7 +334,7 @@ base + N    RW   Page</code></pre>
             <tr><td>C1, C2</td><td></td><td>0.1 uf SMT decoupling capacitor</td></tr>
             <tr><td>CN1</td><td></td><td>32-pin 2-row connector</td></tr>
             <tr><td>DSW1</td><td></td><td>6 position SPST DIP switch</td></tr>
-            <tr><td>R1, R1</td><td></td><td>2.2 k SMT resistor</td></tr>
+            <tr><td>R1, R2</td><td></td><td>2.2 k SMT resistor</td></tr>
             <tr><td>SRC, DST</td><td></td><td>SMT LED</td></tr>
             <tr><td>U1, U2</td><td><a href="https://pdf1.alldatasheet.com/datasheet-pdf/view/65936/IDT/IDT74FCT521BTSO.html">IDT74FCT521BTSO</a></td><td>8-bit Identity Comparator</td></tr>
             <tr><td>U3, U4</td><td><a href="https://assets.nexperia.com/documents/data-sheet/74LVC2G00.pdf">74LVC2G00DP</a></td><td>Dual 2-input NAND gate</td></tr>
