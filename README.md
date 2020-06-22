@@ -1,6 +1,8 @@
 # Transport Triggered Architecture - Modular
 
-[**Read online**](https://dslik.github.io/ttam/)
+[**Design and Implementation Guide**](https://dslik.github.io/ttam/)
+
+[**Build Log**](https://github.com/dslik/ttam/blob/master/build_log.md)
 
 ## Acknowledgements
 
