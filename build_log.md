@@ -1,6 +1,16 @@
 Build Log
 =========
 
+2020-06-21
+
+Having a bus monitor is important for debugging and single-step programming. I'd like to have the bus monitor serve two purposes: To show the status of the bus, and to show the value of two registers. This way the same card can be used as a simple output device. As such, the bus monitor card needs to support two optional GRAMs+GRDMs.
+
+Switching between the live address and data busses requires a switch, ideally something like a '257, but unfortunately, the only ones I have on-hand are HC, and thus won't work with the TTL voltages that I'm using.
+
+Displaying the bus values could be done using LED bar graphs, 16 LEDs for each bit of the address bus and 16 LEDs for each bit for the data bus. However, I'd like to show them as hex values, since that simplifies programming. While this can be accomplished using a 7-segment display and some logic, I'm going to use a small EPROM as a look-up table and some LED matrix displays instead. This way I can show either binary or hex. These are now ordered, along with some right-angle DIP sockets (which are surprisingly hard to find and expensive).
+
+Since the bus monitor board is based on the TTAM Carrier, I've been working on that board first. It's a little tricky to route with only two layers, but I'll be able to make it work.
+
 2020-06-13
 
 The first functional unit, a single register, is done. The delay logic to handle asynchronous operation takes more board space than I would have liked. The delay IC I chose is one I have on hand, selecting a different one that has a different configuration of delays may allow me to reduce the number of delay ICs from two to one, which would save some space. I could also move this onto the carrier, but that only makes sense if the delay can be made configurable. 
