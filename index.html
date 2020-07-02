@@ -126,6 +126,25 @@
         <h3>Carrier Card (TTAM/C)</h3>
         <p id="ttam-carrier">The TTAM carrier card is a standard 3U 160 mm Eurocard board that conforms to the VME mechanical specification. It provides bus isolation, power conditioning, and has sites to plug in two TTAM/A address modules, three TTAM/D data modules, and one TTAM/P processing module.</p>
         <img src="img/ttam_carrier.png" style="width: 700px;"/>
+        <img src="img/Carrier_render.png" style="width: 700px;"/>
+        <p>Bill of Material:</p>
+        <table border="true" style="width: 700px;">
+            <tr><th>Number</th><th>Part</th><th>Description</th></tr>
+            <tr><td>C1</td><td></td><td>Main supply bulk capacitor - Value TBD</td></tr>
+            <tr><td>C2</td><td></td><td>1 uf SMT supply filter capacitor</td></tr>
+            <tr><td>C3, C4</td><td></td><td>0.1 uf SMT decoupling capacitor</td></tr>
+            <tr><td>CN1, CN2</td><td></td><td>32-pin 2-row connector for TTAM/A</td></tr>
+            <tr><td>CN3 - CN11</td><td></td><td>24-pin 2-row connector for TTAM/D and TTAM/P</td></tr>
+            <tr><td>CN12 - CN14</td><td></td><td>6-pin 1-row connector for JTAG</td></tr>
+            <tr><td>P1</td><td></td><td>Right-angle euro-DIN three-row connector</td></tr>
+            <tr><td>R1</td><td></td><td>2.2 k SMT resistor</td></tr>
+            <tr><td>R2</td><td></td><td>230 ohm SMT resistor</td></tr>
+            <tr><td>R3 - R6</td><td></td><td>10 K SMT pull-up resistor</td></tr>
+            <tr><td>LED1</td><td></td><td>SMT LED</td></tr>
+            <tr><td>U1, U2</td><td><a href="https://www.ti.com/lit/ds/symlink/sn74abt16245a.pdf">SN74ABT16245ADLR</a></td><td>Transceiver, Non-Inverting 2 Element 8 Bit per Element 3-State Output</td></tr>
+            <tr><td>U3</td><td><a href="https://assets.nexperia.com/documents/data-sheet/74LVC1G11.pdf">74LVC1G11GW</a></td><td>Single 3-input AND gate</td></tr>
+            <tr><td>U4</td><td><a href="http://ww1.microchip.com/downloads/en/DeviceDoc/20005725B.pdf">MIC2544-1YM</a></td><td>Hot Plug power controller</td></tr>
+        </table>
         <h4>TTAM/D Connectors</h4>
         <p>Each TTAM/D module has two 24-pin connectors.</p>
         <h5>Data Bus Connector (Top Connector)</h4>
@@ -228,7 +247,7 @@
         </ul>
 
         <h4>JTAG Boundary Scan Connector</h4>
-        <p>A six-pin JTAG port is located at the front of the card, and is connected to each of the TTAM/D data bus connectors. This allows for boundary-scan automated testing of a function unit without having to connect it to the bus.</p>
+        <p>Three six-pin JTAG ports are located at the front of the card, and is connected to each of the TTAM/D data bus connectors. This allows for boundary-scan automated testing of a function unit without having to connect it to the bus.</p>
 
         <h3 id="MBDS">Manual Bus Display System (MBDS)</h3>
         <p>The MBDS is a dedicated card that displays the current state of the address and data busses, plus control signals, in binary. There are two modes of operation, a first mode displays the current bus state, and a second mode where the contents of one or two optionally installed register TTAM/D (and corresponding TTAM/As) is displayed. Four <a href="https://www.idt.com/us/en/document/dst/qs3390-datasheet">IDTQS3390</a> bus switches are used to switch between the bus signals and the outputs of the TTAM/D modules.</p>

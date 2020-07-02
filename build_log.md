@@ -1,6 +1,16 @@
 Build Log
 =========
 
+2020-07-01
+
+Finally got the generic TTAM carrier PCB finished. It took much longer than I expected because of the number of times I had to fiddle around with traces each time I would move things around. Parametric EDA sure is looking appealing right now. I’ll be basing the bus monitor and bus control boards off this board, with positions 1 and 2 removed, and the TTAM/P replaced with a TTAM/D module socket.
+
+I originally had the JTAG lines all connected together, but that only works when all the TTAM/D sockets are populated with modules that support JTAG. I could use some jumpers or DIP switches to allow them to be enabled/disabled, but for this revision, I broke out the JTAG lines from each module to a seperate connector.
+
+Looks like it's time to order some PCBs to do a final physical check. The last batch of boards was held by DHL for three weeks due to shipping issues (grrr), hopefully this one will be a bit faster getting here.
+
+I received the 3U VME chassis I ordered a few days ago, and it looks like it's designed for 260 mm deep cards, rather than the 160 mm deep card that I've been designing. IT will still work, though, but I won't be able to install the the front panels on the carrier boards.
+
 2020-06-21
 
 Having a bus monitor is important for debugging and single-step programming. I'd like to have the bus monitor serve two purposes: To show the status of the bus, and to show the value of two registers. This way the same card can be used as a simple output device. As such, the bus monitor card needs to support two optional GRAMs+GRDMs.
