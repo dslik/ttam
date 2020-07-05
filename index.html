@@ -183,16 +183,16 @@
             var svg = svgen("svg", { width:500, height:220, id:"processing_pinout" });
             var element = document.getElementById('processing_pinout');
             drawPinout(svg, { width:2, length:12, names:["P14", "P12", "P10", "P08",
-                                                         "G4", "G3", "G2", "G1", 
+                                                         "G4", "PWR", "GND", "G1", 
                                                          "P06", "P04", "P02", "P00",
                                                          "P15", "P13", "P11", "P09", 
-                                                         "G5", "PWR", "GND", "G0", 
+                                                         "G5", "G3", "G2", "G0", 
                                                          "P07", "P05", "P03", "P01"],
                                                  colors:["#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD", 
-                                                         "#F6E15D", "#F6E15D", "#F6E15D", "#F6E15D", 
+                                                         "#F6E15D", "#AB3535", "#000000", "#F6E15D", 
                                                          "#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD",
                                                          "#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD", 
-                                                         "#F6E15D", "#AB3535", "#000000", "#F6E15D", 
+                                                         "#F6E15D", "#F6E15D", "#F6E15D", "#F6E15D", 
                                                          "#D2C8BD", "#D2C8BD", "#D2C8BD", "#D2C8BD"] });
             element.parentNode.replaceChild(svg, element)
         </script>
@@ -200,7 +200,7 @@
         <ul>
             <li>P00 through P15 are an internal data bus connecting the TTAM/D to a TTAM/P.</li>
             <li>G0 through G5 are general purpose pins. G0 is connected to either the G0N or G0S pin on the corresponding TTAM/A.</li>
-            <li>G4 and G5 on TTAM/D position #3 are connected to IACK* and DS1*, respectively.</li>
+            <li>G2 and G3 on TTAM/D position #3 are connected to IACK* and DS1*, respectively.</li>
             <li>PWR and GND provide power and ground, respectively.</li>
         </ul>
         <h4>TTAM/P Connectors</h4>
@@ -289,7 +289,7 @@ mov 0x05 <- 0x0A</code></pre>
         </aside>
         <p>The IVFU is implemented as a combination TTAM/D + TTAM/A module. As such, it can only be installed in TTAM/D position 3.</p>
 
-        <h4 id="GRDM">Generic Register Data Module (GRAM)</h4>
+        <h4 id="GRDM">Generic Register Data Module (GRDM)</h4>
         <p>When fully populated, the GRDM implements a single read-write register that can be used stand-alone or connected to a processing module.</p>
         <p>WA is connected to G3 to signal to the TTAM/P when a new value has been written.</p>
         <p>RS is connected to G1 to signal to the TTAM/P when a value is being read been written, and pulling G2 low allows the processing module to drive the bus.</p>
