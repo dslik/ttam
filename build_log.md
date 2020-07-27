@@ -1,6 +1,30 @@
 Build Log
 =========
 
+2020-07-26
+
+The PCBs have arrived, and look good. Two mounting holes to connect to the front panel are slight off, but that won't prevent me from assembling the first version of the carrier board. Second Digikey order has been placed, and I almost have everything needed to assemble the board.
+
+![Carrier v1.1](img/IMG_4621.jpeg)
+
+Good progress has also been made on the bus monitor board design. I've prototyped out the display subsystem using a 74LS393 dual counter (using 5 bits) that drives 6x 74HC139 to select the columns, with a 27C128 EPROM driving the rows. This implements a simple multiplexed display driver, with the high and low 8-bits of the address and data busses being switched as inputs to the EPROM, in sync with the display column selection.
+
+![Breadboard](img/IMG_4620.jpeg)
+
+The final design will use a 3x SN74HCT138 demultiplexers. Two switches will controls the render style and controls if the board shows live bus values or stored register values (from two TTAM/D sites on the board).
+
+I can also have two banks programmed in, allowing me to have to different visual representations, one showing hex values of the address and data busses, and a second showing a binary representation.
+
+![Display](img/bus_monitor_display.png)
+
+2020-07-12
+
+PCBs have shipped, Digikey order is placed. While I've been doing more work on the bus monitor, there is enough of an overlap between the carrier board and the monitor board that I want to wait until I've tested the carrier board before finishing up the bus monitor PCB.
+
+I'm also unhappy with the delay system. I am looking at using a DS1124 instead, which is programmable. This, of course, introduces a bootstrapping problem that wasn't present when each module has the delay hard-wired onto the module. So to do this, there would need to be a discovery/configuration phase at startup, where some entity scans all connected function units, configures delays, before the system boots. This would necesitate having some serial EPROM on each module (which would take some board space, but much less board space than the delay subsystem).
+
+This discovery phase has other uses, as it can drive the input to a compiler. This is especially important for TTA architectures, as generating machine code requires detailed knowlege of the available functional units and their addresses.
+
 2020-07-04
 
 Re-worked the power distribution net on the TTAM carrier PCB to handle the fact that some of the ICs that may be mounted on TTAM/D boards can draw up to an amp at 5V. 24 mils should be more than enough.
