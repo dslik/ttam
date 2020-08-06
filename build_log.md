@@ -1,6 +1,12 @@
 Build Log
 =========
 
+2020-08-03
+
+Completed the breadboard test for the bus monitor display subsystem. Everything worked as expected. The clock generator needs to be robust, since if it stops scanning the rows, the current driven to the LEDs will exceed their ratings. The bus monitor is now blocked on assembling the first TTAM Carrier board, to ensure that any PCB design errors there are caught before using it as a template for the bus monitor board.
+
+![Breadboard2](img/IMG_4739.jpeg)
+
 2020-07-26
 
 The PCBs have arrived, and look good. Two mounting holes to connect to the front panel are slight off, but that won't prevent me from assembling the first version of the carrier board. Second Digikey order has been placed, and I almost have everything needed to assemble the board.
