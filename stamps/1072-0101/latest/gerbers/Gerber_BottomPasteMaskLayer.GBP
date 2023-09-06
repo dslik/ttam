@@ -1,0 +1,32 @@
+G04 Layer: BottomPasteMaskLayer*
+G04 Panelize: , Column: 2, Row: 2, Board Size: 58.42mm x 58.42mm, Panelized Board Size: 118.84mm x 118.84mm*
+G04 EasyEDA v6.5.34, 2023-09-05 23:31:59*
+G04 3ff1d21ffa584fb08a1032706516b83c,5a6b42c53f6a479593ecc07194224c93,10*
+G04 Gerber Generator version 0.2*
+G04 Scale: 100 percent, Rotated: No, Reflected: No *
+G04 Dimensions in millimeters *
+G04 leading zeros omitted , absolute positions ,4 integer and 5 decimal *
+%FSLAX45Y45*%
+%MOMM*%
+
+%AMMACRO1*21,1,$1,$2,0,0,$3*%
+%ADD10MACRO1,0.8X0.9X0.0000*%
+%ADD11MACRO1,0.8X0.9X90.0000*%
+
+%LPD*%
+D10*
+G01*
+X2584601Y5588000D03*
+G01*
+X2444601Y5588000D03*
+D11*
+G01*
+X3048000Y4184801D03*
+G01*
+X3048000Y4044801D03*
+D10*
+G01*
+X3994301Y4826000D03*
+G01*
+X3854301Y4826000D03*
+M02*
